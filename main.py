@@ -8,3 +8,5 @@
 # -- repository: YOUR REPOSITORY URL                                                                     -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
+import functions as fn
+hello = fn.f_pip_size('xauusd')

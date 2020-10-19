@@ -8,3 +8,7 @@
 # -- repository: YOUR REPOSITORY URL                                                                     -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
+import pandas as pd
+oanda_instruments = r'C:\Users\manue\Documents\Documentos\Microestructura y sistemas de trading/Oanda_instruments.csv'
+oanda_instruments = pd.read_csv(oanda_instruments,
+                                  header=0)
