@@ -14,3 +14,7 @@ prueba_size = fn.f_pip_size('xauusd')
 tiempos = fn.f_columnas_tiempos(dt.archivo)
 pips = fn.f_columnas_pips(tiempos)
 diccionario = fn.f_estadisticas_ba(dt.archivo)
+evcap=fn.f_evolucion_capital(dt.archivo)
+print(evcap)
+
+
