@@ -1,4 +1,3 @@
-
 """
 # -- --------------------------------------------------------------------------------------------------- -- #
 # -- project: A SHORT DESCRIPTION OF THE PROJECT                                                         -- #
@@ -9,9 +8,12 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 import pandas as pd
-oanda_instruments = r'C:\Users\manue\Documents\Documentos\Microestructura y sistemas de trading/Oanda_instruments.csv'
+
+oanda_instruments = 'c:/Users/luzitaifi/Documents/Micro_Estructuras_Trading/Lab_3/myst_equipo3_lab3/Oanda_Instruments' \
+                    '.csv '
 oanda_instruments = pd.read_csv(oanda_instruments,
-                                  header=0,sep=',', index_col=0,parse_dates=False,
-                                 skip_blank_lines=True)
-archivo = archivo = r'C:\Users\manue\Documents\Documentos\Microestructura y sistemas de trading\archivo_tradeview_1.csv'
+                                header=0, sep=',', index_col=0, parse_dates=False,
+                                skip_blank_lines=True)
+archivo = archivo = 'c:/Users/luzitaifi/Documents/Micro_Estructuras_Trading/Lab_3/myst_equipo3_lab3' \
+                    '/archivo_tradeview_1.csv '
 archivo = pd.read_csv(archivo, header=0)

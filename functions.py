@@ -7,14 +7,17 @@
 # -- repository: YOUR REPOSITORY URL                                                                     -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
-#%%
+# %%
 import numpy as np
 import data as dt
 import pandas as pd
+import datetime
+from datetime import datetime
+
 
 # %% aqui hacemos la función del multiplicador
 def f_pip_size(ticker_f):
-    oanda_instruments =dt.oanda_instruments
+    oanda_instruments = dt.oanda_instruments
 
     ticker_up = ticker_f.upper()
     if ticker_up == 'WTICO':
@@ -43,19 +46,21 @@ def f_pip_size(ticker_f):
             mult = 1
     return mult
 
-#%%
-#Aquí ponemos la función para calcular los segundos transcurridos
+
+# %%
+# Aquí ponemos la función para calcular los segundos transcurridos
 
 def f_columnas_tiempos(df_data):
     open_time = pd.to_datetime(df_data['openTime'])
     close_time = pd.to_datetime(df_data['closeTime'])
     delta = [(close_time[i] - open_time[i]).total_seconds() for i in range(len(df_data['openTime']))]
-    #Hay que regresar todo el data frame
+    # Hay que regresar todo el data frame
     df_data['Tiempo'] = delta
     return df_data
 
-#%%
-#Aquí ponemos la función para obtener lo que concierne a pips
+
+# %%
+# Aquí ponemos la función para obtener lo que concierne a pips
 def f_columnas_pips(archivo):
     pips = []
     pips_acum = []
@@ -64,21 +69,25 @@ def f_columnas_pips(archivo):
         if i == 0:
             if archivo['Type'].iloc[i] == 'buy':
                 pips.append(
-                    (archivo['closePrice'].iloc[i] - archivo['openPrice'].iloc[i]) * f_pip_size(archivo['Symbol'].iloc[i]))
+                    (archivo['closePrice'].iloc[i] - archivo['openPrice'].iloc[i]) * f_pip_size(
+                        archivo['Symbol'].iloc[i]))
             else:
                 pips.append(
-                    (archivo['openPrice'].iloc[i] - archivo['closePrice'].iloc[i]) * f_pip_size(archivo['Symbol'].iloc[i]))
+                    (archivo['openPrice'].iloc[i] - archivo['closePrice'].iloc[i]) * f_pip_size(
+                        archivo['Symbol'].iloc[i]))
             pips_acum.append(pips[0])
             profit_acum.append(archivo['Profit'].iloc[0])
 
         else:
             if archivo['Type'].iloc[i] == 'buy':
                 pips.append(
-                    (archivo['closePrice'].iloc[i] - archivo['openPrice'].iloc[i]) * f_pip_size(archivo['Symbol'].iloc[i]))
+                    (archivo['closePrice'].iloc[i] - archivo['openPrice'].iloc[i]) * f_pip_size(
+                        archivo['Symbol'].iloc[i]))
 
             else:
                 pips.append(
-                    (archivo['openPrice'].iloc[i] - archivo['closePrice'].iloc[i]) * f_pip_size(archivo['Symbol'].iloc[i]))
+                    (archivo['openPrice'].iloc[i] - archivo['closePrice'].iloc[i]) * f_pip_size(
+                        archivo['Symbol'].iloc[i]))
 
             pips_acum.append(pips_acum[i - 1] + pips[i])
             profit_acum.append(profit_acum[i - 1] + archivo['Profit'].iloc[i])
@@ -88,12 +97,13 @@ def f_columnas_pips(archivo):
     archivo['profit_acum'] = profit_acum
     return archivo
 
-#%% Aquí hacemos la función para estadistica basica
+
+# %% Aquí hacemos la función para estadistica basica
 def f_estadisticas_ba(archivo):
     medida = ['Ops totales', 'Ganadoras', 'Ganadoras_c', 'Ganadoras_v',
               'Perdedoras', 'Perdedoras_c', 'Perdedoras_v', 'Mediana (Profit)', 'Mediana (Pips)', 'r_efectividad',
               'r_proporcion',
-              'r_efectividad_c', 'r_efectividad_v'] #hacemos una lista con todo lo necesario en medida
+              'r_efectividad_c', 'r_efectividad_v']  # hacemos una lista con todo lo necesario en medida
 
     ops_totales = len(archivo)
     Ganadoras = np.sum([True for i in range(len(archivo)) if archivo['Profit'].iloc[i] > 0])
@@ -129,7 +139,6 @@ def f_estadisticas_ba(archivo):
 
     # antes que nada hay obtener los tickers unicos
 
-
     unicos = np.unique(archivo['Symbol'])  # listo ya tenemos los unicos
     rank = []
     for i in range(len(unicos)):
@@ -148,8 +157,32 @@ def f_estadisticas_ba(archivo):
     df_2 = pd.DataFrame({'symbol': unicos, 'rank': rank})
     df_2 = df_2.sort_values(by='rank', ascending=False)
 
-
     final = {'df_1_tabla': df, 'df_2_ranking': df_2}
     return final
 
+
 # termina la parte 1
+
+
+# Inicio Parte 2:Métricas de Atribución al Desempeño
+
+# Primer output: Evolucion del capital.
+
+def f_evolucion_capital(dt_data):
+    # Columna timestamp
+    # Quitar el horario a las fechas.
+    dt_data['openTime'] = pd.to_datetime(dt_data['openTime'])
+    dt_data['openTime'] = dt_data['openTime'].dt.strftime('%Y-%m-%d')
+    dpp = pd.DataFrame(columns=['timestamp', 'profit_d', 'profit_acm_d'])
+    uu = dt_data['openTime'].unique()
+    dpp['timestamp'] = uu
+    # Columna profit_d
+    pff = []
+    for i in range(len(uu)):
+        pf = (dt_data[dt_data['openTime'] == dpp['timestamp'][i]]['Profit'])
+        pff.append(pf.sum())
+    dpp['profit_d'] = pff
+    # Columna profit_acm_d
+    pacm = dpp['profit_d'].cumsum()
+    dpp['profit_acm_d'] = 100000 - pacm
+    return dpp
