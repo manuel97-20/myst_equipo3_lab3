@@ -7,9 +7,9 @@
 # -- repository: YOUR REPOSITORY URL                                                                     -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
+
 import data as dt
 import functions as fn
-
 prueba_size = fn.f_pip_size('xauusd')
 tiempos = fn.f_columnas_tiempos(dt.archivo)
 pips = fn.f_columnas_pips(tiempos)
