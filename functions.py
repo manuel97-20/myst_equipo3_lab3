@@ -186,3 +186,71 @@ def f_evolucion_capital(dt_data):
     pacm = dpp['profit_d'].cumsum()
     dpp['profit_acm_d'] = 100000 - pacm
     return dpp
+
+
+# Segundo output: MAD(Luz)
+
+# Sharpe:
+
+def f_estadisticas_mad(new_df):
+    renlog = np.log(new_df['profit_acm_d'] / new_df['profit_acm_d'].shift()).dropna()
+    prra = renlog.mean() * 360
+    rf = .05
+    dva = renlog.std()
+    shp = (prra - rf) / dva
+
+    # Draw Down
+    maxcap = new_df['profit_acm_d'].max()
+    w = new_df[new_df.profit_acm_d == maxcap].index
+    f = w[0]
+    if f < (len(new_df['profit_acm_d']) - 1):
+        fi = new_df['timestamp'][f]
+        mincap = new_df['profit_acm_d'][f:].min()
+        ff = new_df['timestamp'][new_df[new_df.profit_acm_d == mincap].index[0]]
+        drawn_down = (mincap - maxcap) / maxcap
+
+    else:
+        evcapn = new_df.shift().dropna().reset_index()
+        nmaxcap = evcapn['profit_acm_d'].max()
+        wn = evcapn[evcapn.profit_acm_d == nmaxcap].index
+        fn = wn[0]
+        fi = evcapn['timestamp'][fn]
+        nmincap = evcapn['profit_acm_d'][fn:].min()
+        ff = evcapn['timestamp'][evcapn[evcapn.profit_acm_d == nmincap].index[0]]
+        drawn_down = (nmincap - nmaxcap) / nmaxcap
+
+    # Draw Up
+
+    mincap = new_df['profit_acm_d'].min()
+    w = new_df[new_df.profit_acm_d == mincap].index
+    f = w[0]
+    if f < (len(new_df['profit_acm_d']) - 1):
+        fiu = new_df['timestamp'][f]
+        maxcap = new_df['profit_acm_d'][f:].max()
+        ffu = new_df['timestamp'][new_df[new_df.profit_acm_d == maxcap].index[0]]
+        drawn_up = (maxcap - mincap)
+
+    else:
+        evcapn = new_df.shift().dropna().reset_index()
+        nmincap = evcapn['profit_acm_d'].min()
+        wn = evcapn[evcapn.profit_acm_d == nmincap].index
+        fn = wn[0]
+        fiu = evcapn['timestamp'][fn]
+        nmaxcap = evcapn['profit_acm_d'][fn:].min()
+        ffu = evcapn['timestamp'][evcapn[evcapn.profit_acm_d == nmaxcap].index[0]]
+        drawn_up = (nmaxcap - nmincap)
+
+    # Data frame MAD
+    mad = pd.DataFrame(columns=['metrica', 'valor', 'descripción'])
+    mad['metrica'] = ['sharpe', 'drawdown_capi', 'drawup_capi']
+    mad['valor'] = [shp, [fi, ff, drawn_down], [fiu, ffu, drawn_up]]
+    mad['descripción'] = ['Muestra el rendimiento extra por encima de la tasa libre de riesgo que puede esperarse en '
+                          'una inversion respecto al riesgo que se asume. '
+                          'Un sharpe alto significa que se obtuvo un retorno sobre rf mucho mayor al riesgo que se '
+                          'contrae.',
+                          'Representa la "racha" de en la que se presento una perdida drastica despues de haber '
+                          'llegado al maximo punto de evolucion de capital '
+                          'en un periodo de inversion. ', 'Señara el lapso de tiempo donde se tuvo una alba continua '
+                                                          'despues de haber tenido la caida maxima del periodo que se '
+                                                          'analiza']
+    return mad
