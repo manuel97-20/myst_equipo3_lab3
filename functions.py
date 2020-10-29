@@ -14,6 +14,9 @@ import pandas as pd
 import datetime
 from datetime import datetime
 
+[dt.archivo['Item'].iloc[i].replace('-e', '') for i in range(len(dt.archivo))]
+
+
 
 # %% aqui hacemos la función del multiplicador
 def f_pip_size(ticker_f):
@@ -51,9 +54,9 @@ def f_pip_size(ticker_f):
 # Aquí ponemos la función para calcular los segundos transcurridos
 
 def f_columnas_tiempos(df_data):
-    open_time = pd.to_datetime(df_data['openTime'])
-    close_time = pd.to_datetime(df_data['closeTime'])
-    delta = [(close_time[i] - open_time[i]).total_seconds() for i in range(len(df_data['openTime']))]
+    open_time = pd.to_datetime(df_data['Open Time'])
+    close_time = pd.to_datetime(df_data['Close Time'])
+    delta = [(close_time[i] - open_time[i]).total_seconds() for i in range(len(df_data['Open Time']))]
     # Hay que regresar todo el data frame
     df_data['Tiempo'] = delta
     return df_data
@@ -69,25 +72,25 @@ def f_columnas_pips(archivo):
         if i == 0:
             if archivo['Type'].iloc[i] == 'buy':
                 pips.append(
-                    (archivo['closePrice'].iloc[i] - archivo['openPrice'].iloc[i]) * f_pip_size(
-                        archivo['Symbol'].iloc[i]))
+                    (archivo['Close Price'].iloc[i] - archivo['Price'].iloc[i]) * f_pip_size(
+                        archivo['Item'].iloc[i]))
             else:
                 pips.append(
-                    (archivo['openPrice'].iloc[i] - archivo['closePrice'].iloc[i]) * f_pip_size(
-                        archivo['Symbol'].iloc[i]))
+                    (archivo['Price'].iloc[i] - archivo['Close Price'].iloc[i]) * f_pip_size(
+                        archivo['Item'].iloc[i]))
             pips_acum.append(pips[0])
             profit_acum.append(archivo['Profit'].iloc[0])
 
         else:
             if archivo['Type'].iloc[i] == 'buy':
                 pips.append(
-                    (archivo['closePrice'].iloc[i] - archivo['openPrice'].iloc[i]) * f_pip_size(
-                        archivo['Symbol'].iloc[i]))
+                    (archivo['Close Price'].iloc[i] - archivo['Price'].iloc[i]) * f_pip_size(
+                        archivo['Item'].iloc[i]))
 
             else:
                 pips.append(
-                    (archivo['openPrice'].iloc[i] - archivo['closePrice'].iloc[i]) * f_pip_size(
-                        archivo['Symbol'].iloc[i]))
+                    (archivo['Price'].iloc[i] - archivo['Close Price'].iloc[i]) * f_pip_size(
+                        archivo['Item'].iloc[i]))
 
             pips_acum.append(pips_acum[i - 1] + pips[i])
             profit_acum.append(profit_acum[i - 1] + archivo['Profit'].iloc[i])
@@ -139,15 +142,15 @@ def f_estadisticas_ba(archivo):
 
     # antes que nada hay obtener los tickers unicos
 
-    unicos = np.unique(archivo['Symbol'])  # listo ya tenemos los unicos
+    unicos = np.unique(archivo['Item'])  # listo ya tenemos los unicos
     rank = []
     for i in range(len(unicos)):
         positives = 0
         negatives = 0
         for j in range(len(archivo)):
-            if unicos[i] == archivo['Symbol'].iloc[j] and archivo['Profit'].iloc[j] > 0:
+            if unicos[i] == archivo['Item'].iloc[j] and archivo['Profit'].iloc[j] > 0:
                 positives += 1
-            elif unicos[i] == archivo['Symbol'].iloc[j] and archivo['Profit'].iloc[j] < 0:
+            elif unicos[i] == archivo['Item'].iloc[j] and archivo['Profit'].iloc[j] < 0:
 
                 negatives += 1
 
@@ -171,15 +174,15 @@ def f_estadisticas_ba(archivo):
 def f_evolucion_capital(dt_data):
     # Columna timestamp
     # Quitar el horario a las fechas.
-    dt_data['openTime'] = pd.to_datetime(dt_data['openTime'])
-    dt_data['openTime'] = dt_data['openTime'].dt.strftime('%Y-%m-%d')
+    dt_data['Open Time'] = pd.to_datetime(dt_data['Open Time'])
+    dt_data['Open Time'] = dt_data['Open Time'].dt.strftime('%Y-%m-%d')
     dpp = pd.DataFrame(columns=['timestamp', 'profit_d', 'profit_acm_d'])
-    uu = dt_data['openTime'].unique()
+    uu = dt_data['Open Time'].unique()
     dpp['timestamp'] = uu
     # Columna profit_d
     pff = []
     for i in range(len(uu)):
-        pf = (dt_data[dt_data['openTime'] == dpp['timestamp'][i]]['Profit'])
+        pf = (dt_data[dt_data['Open Time'] == dpp['timestamp'][i]]['Profit'])
         pff.append(pf.sum())
     dpp['profit_d'] = pff
     # Columna profit_acm_d
