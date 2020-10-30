@@ -17,7 +17,6 @@ from datetime import datetime
 [dt.archivo['Item'].iloc[i].replace('-e', '') for i in range(len(dt.archivo))]
 
 
-
 # %% aqui hacemos la función del multiplicador
 def f_pip_size(ticker_f):
     oanda_instruments = dt.oanda_instruments
@@ -196,64 +195,44 @@ def f_evolucion_capital(dt_data):
 # Sharpe:
 
 def f_estadisticas_mad(new_df):
-    renlog = np.log(new_df['profit_acm_d'] / new_df['profit_acm_d'].shift()).dropna()
-    prra = renlog.mean() * 360
-    rf = .05
-    dva = renlog.std()
-    shp = (prra - rf) / dva
+    relo = np.diff(np.log(new_df['profit_acm_d']))
+    rf = .05 / 300
+    dvd = relo.std()
+    shp = round(np.mean(relo - rf) / dvd, 5)
 
     # Draw Down
-    maxcap = new_df['profit_acm_d'].max()
-    w = new_df[new_df.profit_acm_d == maxcap].index
-    f = w[0]
-    if f < (len(new_df['profit_acm_d']) - 1):
-        fi = new_df['timestamp'][f]
-        mincap = new_df['profit_acm_d'][f:].min()
-        ff = new_df['timestamp'][new_df[new_df.profit_acm_d == mincap].index[0]]
-        drawn_down = (mincap - maxcap) / maxcap
-
-    else:
-        evcapn = new_df.shift().dropna().reset_index()
-        nmaxcap = evcapn['profit_acm_d'].max()
-        wn = evcapn[evcapn.profit_acm_d == nmaxcap].index
-        fn = wn[0]
-        fi = evcapn['timestamp'][fn]
-        nmincap = evcapn['profit_acm_d'][fn:].min()
-        ff = evcapn['timestamp'][evcapn[evcapn.profit_acm_d == nmincap].index[0]]
-        drawn_down = (nmincap - nmaxcap) / nmaxcap
+    lid = []
+    for i in np.arange(1, len(new_df['profit_acm_d']), 1):
+        if new_df['profit_acm_d'][i] < new_df['profit_acm_d'][i - 1] and new_df['profit_acm_d'][i] < \
+                new_df['profit_acm_d'][0]:
+            lid.append(i)
+            ww = (lid)
+    drawn_down = new_df['profit_acm_d'][ww[-1]] - new_df['profit_acm_d'][ww[0]]
+    fi = new_df['timestamp'][ww[0]]
+    ff = new_df['timestamp'][ww[-1]]
 
     # Draw Up
-
-    mincap = new_df['profit_acm_d'].min()
-    w = new_df[new_df.profit_acm_d == mincap].index
-    f = w[0]
-    if f < (len(new_df['profit_acm_d']) - 1):
-        fiu = new_df['timestamp'][f]
-        maxcap = new_df['profit_acm_d'][f:].max()
-        ffu = new_df['timestamp'][new_df[new_df.profit_acm_d == maxcap].index[0]]
-        drawn_up = (maxcap - mincap)
-
-    else:
-        evcapn = new_df.shift().dropna().reset_index()
-        nmincap = evcapn['profit_acm_d'].min()
-        wn = evcapn[evcapn.profit_acm_d == nmincap].index
-        fn = wn[0]
-        fiu = evcapn['timestamp'][fn]
-        nmaxcap = evcapn['profit_acm_d'][fn:].min()
-        ffu = evcapn['timestamp'][evcapn[evcapn.profit_acm_d == nmaxcap].index[0]]
-        drawn_up = (nmaxcap - nmincap)
+    li = []
+    for i in np.arange(1, len(new_df['profit_acm_d']), 1):
+        if new_df['profit_acm_d'][i] > new_df['profit_acm_d'][i - 1]:
+            li.append(i)
+            w = (li)
+    drawn_up = new_df['profit_acm_d'][w[-1]] - new_df['profit_acm_d'][w[0] - 1]
+    fiu = new_df['timestamp'][w[0] - 1]
+    ffu = new_df['timestamp'][w[-1]]
 
     # Data frame MAD
     mad = pd.DataFrame(columns=['metrica', 'valor', 'descripción'])
     mad['metrica'] = ['sharpe', 'drawdown_capi', 'drawup_capi']
     mad['valor'] = [shp, [fi, ff, drawn_down], [fiu, ffu, drawn_up]]
     mad['descripción'] = ['Muestra el rendimiento extra por encima de la tasa libre de riesgo que puede esperarse en '
-                          'una inversion respecto al riesgo que se asume. '
-                          'Un sharpe alto significa que se obtuvo un retorno sobre rf mucho mayor al riesgo que se '
-                          'contrae.',
-                          'Representa la "racha" de en la que se presento una perdida drastica despues de haber '
-                          'llegado al maximo punto de evolucion de capital '
-                          'en un periodo de inversion. ', 'Señara el lapso de tiempo donde se tuvo una alba continua '
-                                                          'despues de haber tenido la caida maxima del periodo que se '
-                                                          'analiza']
+                      'una inversión respecto al riesgo que se asume. '
+                      'Un sharpe alto significa que se obtuvo un retorno sobre rf mucho mayor al riesgo que se '
+                      'contrae.',
+                      'Representa la "racha" de en la que se presentó una perdida drástica después de haber '
+                      'llegado al máximo punto de evolución de capital '
+                      'en un periodo de inversión. ', 'Señara el lapso de tiempo donde se tuvo un alba continua '
+                                                      'después de haber tenido la caída Máxima del periodo que se '
+                                                      'analiza'
+]
     return mad
