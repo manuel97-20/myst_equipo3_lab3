@@ -186,7 +186,7 @@ def f_evolucion_capital(dt_data):
     dpp['profit_d'] = pff
     # Columna profit_acm_d
     pacm = dpp['profit_d'].cumsum()
-    dpp['profit_acm_d'] = 100000 - pacm
+    dpp['profit_acm_d'] = 100000 + pacm
     return dpp
 
 
