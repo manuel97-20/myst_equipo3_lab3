@@ -236,3 +236,23 @@ def f_estadisticas_mad(new_df):
                                                       'analiza'
 ]
     return mad
+
+def  operaciones_ganadoras(data):
+    instrumento = data.Item[data['Profit'].astype(float) > 0]
+    volumen = data.Size[data['Profit'].astype(float) > 0]
+    sentido = data.Type[data['Profit'].astype(float) > 0]
+    profit_ganadora = (data.Profit[data['Profit'].astype(float) > 0]).astype(float) + 100000
+
+    ganadoras = pd.DataFrame({'intrumento': instrumento, 'volumen': volumen, 'sentido': sentido, 'profit_ganadora': profit_ganadora})
+
+    return (ganadoras)
+
+def operaciones_perdedoras(data):
+    instrumento2 = data.Item[data['Profit'].astype(float) < 0]
+    volumen2 = data.Size[data['Profit'].astype(float) < 0]
+    sentido2 = data.Type[data['Profit'].astype(float) < 0]
+    profit_perdedora = (data.Profit[data['Profit'].astype(float) < 0]).astype(float) + 100000
+
+    perdedora = pd.DataFrame(
+        {'intrumento': instrumento2, 'volumen': volumen2, 'sentido': sentido2, 'profit_ganadora': profit_perdedora})
+    return (perdedora)
