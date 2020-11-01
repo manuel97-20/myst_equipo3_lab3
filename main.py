@@ -8,16 +8,13 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 import functions as fn
-import data as dt
-import datetime
-import pandas as pd
-import numpy as np
 
+archivo = fn.f_leer_archivo(r'C:\Users\manue\Documents\Documentos\Microestructura y sistemas de trading\myst_equipo3_lab3\Statement.csv')
 prueba_size = fn.f_pip_size('xauusd')
-tiempos = fn.f_columnas_tiempos(dt.archivo)
+tiempos = fn.f_columnas_tiempos(archivo)
 pips = fn.f_columnas_pips(tiempos)
-diccionario = fn.f_estadisticas_ba(dt.archivo)
-evcap = fn.f_evolucion_capital(dt.archivo)
+diccionario = fn.f_estadisticas_ba(archivo)
+evcap = fn.f_evolucion_capital(archivo)
 mad = fn.f_estadisticas_mad(evcap)
 
 # Saber si al cerrar una operacion ganadora se quedo abierta una con perdida flotante

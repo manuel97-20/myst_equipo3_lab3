@@ -14,7 +14,20 @@ import pandas as pd
 import datetime
 from datetime import datetime
 
-[dt.archivo['Item'].iloc[i].replace('-e', '') for i in range(len(dt.archivo))]
+def f_leer_archivo(ruta_archivo):
+
+    archivo = pd.read_csv(ruta_archivo, header=0, skip_blank_lines=True)
+    archivo = archivo.dropna().reset_index(drop=True)
+    archivo = archivo.rename(columns={'Price.1': 'Close Price'}, inplace=False)
+    archivo['Close Price'] = pd.to_numeric(archivo['Close Price'])
+    archivo['Price'] = pd.to_numeric(archivo['Price'])
+    archivo['Profit'] = [i.replace(" ", "") for i in archivo['Profit']]
+    archivo['Profit'] = pd.to_numeric(archivo['Profit'])
+    archivo['Item'] = [archivo['Item'].iloc[i].replace('-e', '') for i in range(len(archivo))]
+    archivo['Item'] = [i.replace('wticousd', 'wtico') for i in archivo['Item']]
+
+    return archivo
+
 
 
 # %% aqui hacemos la función del multiplicador
@@ -188,7 +201,7 @@ def f_evolucion_capital(dt_data):
     dpp['profit_d'] = pff
     # Columna profit_acm_d
     pacm = dpp['profit_d'].cumsum()
-    dpp['profit_acm_d'] = 100000 - pacm
+    dpp['profit_acm_d'] = 100000 + pacm
     return dpp
 
 # Segundo output: MAD(Luz)
@@ -238,4 +251,26 @@ def f_estadisticas_mad(new_df):
 ]
     return mad
 
+<<<<<<< HEAD
 
+=======
+def  operaciones_ganadoras(data):
+    instrumento = data.Item[data['Profit'].astype(float) > 0]
+    volumen = data.Size[data['Profit'].astype(float) > 0]
+    sentido = data.Type[data['Profit'].astype(float) > 0]
+    profit_ganadora = (data.Profit[data['Profit'].astype(float) > 0]).astype(float) + 100000
+
+    ganadoras = pd.DataFrame({'intrumento': instrumento, 'volumen': volumen, 'sentido': sentido, 'profit_ganadora': profit_ganadora})
+
+    return (ganadoras)
+
+def operaciones_perdedoras(data):
+    instrumento2 = data.Item[data['Profit'].astype(float) < 0]
+    volumen2 = data.Size[data['Profit'].astype(float) < 0]
+    sentido2 = data.Type[data['Profit'].astype(float) < 0]
+    profit_perdedora = (data.Profit[data['Profit'].astype(float) < 0]).astype(float) + 100000
+
+    perdedora = pd.DataFrame(
+        {'intrumento': instrumento2, 'volumen': volumen2, 'sentido': sentido2, 'profit_ganadora': profit_perdedora})
+    return (perdedora)
+>>>>>>> f65843035f33f1495cf492a9c84d98b8d2a83006
