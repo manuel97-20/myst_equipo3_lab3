@@ -173,22 +173,23 @@ def f_estadisticas_ba(archivo):
 def f_evolucion_capital(dt_data):
     # Columna timestamp
     # Quitar el horario a las fechas.
-    dt_data['Open Time'] = pd.to_datetime(dt_data['Open Time'])
-    dt_data['Open Time'] = dt_data['Open Time'].dt.strftime('%Y-%m-%d')
+    sd=pd.DataFrame(columns=['t'])
+    sd['t'] = pd.to_datetime(dt_data['Open Time'])
+    sd['t']  = sd['t'].dt.strftime('%Y-%m-%d')
     dpp = pd.DataFrame(columns=['timestamp', 'profit_d', 'profit_acm_d'])
-    uu = dt_data['Open Time'].unique()
+    uu = sd['t'] .unique()
     dpp['timestamp'] = uu
+
     # Columna profit_d
     pff = []
     for i in range(len(uu)):
-        pf = (dt_data[dt_data['Open Time'] == dpp['timestamp'][i]]['Profit'])
+        pf = (dt_data[sd['t']  == dpp['timestamp'][i]]['Profit'])
         pff.append(pf.sum())
     dpp['profit_d'] = pff
     # Columna profit_acm_d
     pacm = dpp['profit_d'].cumsum()
     dpp['profit_acm_d'] = 100000 - pacm
     return dpp
-
 
 # Segundo output: MAD(Luz)
 
@@ -236,3 +237,5 @@ def f_estadisticas_mad(new_df):
                                                       'analiza'
 ]
     return mad
+
+

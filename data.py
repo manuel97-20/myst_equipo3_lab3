@@ -15,7 +15,7 @@ oanda_instruments = pd.read_csv(oanda_instruments,
                                 header=0, sep=',', index_col=0, parse_dates=False,
                                 skip_blank_lines=True)
 
-archivo = archivo = 'c:/Users/luzitaifi/Documents/Micro_Estructuras_Trading/Lab_3/myst_equipo3_lab3/Statement' \
+archivo = archivo = 'c:/Users/luzitaifi/Documents/Micro_Estructuras_Trading/Lab_3/myst_equipo3_lab3/Oanda' \
                     '.csv'
 archivo = pd.read_csv(archivo, header=0, skip_blank_lines=True)
 archivo = archivo.dropna().reset_index(drop=True)
