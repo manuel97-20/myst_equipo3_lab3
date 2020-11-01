@@ -8,26 +8,17 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 import functions as fn
+import pandas as pd
+import numpy as np
 
-archivo = fn.f_leer_archivo(r'C:\Users\manue\Documents\Documentos\Microestructura y sistemas de trading\myst_equipo3_lab3\Statement.csv')
+archivo = fn.f_leer_archivo('c:/Users/luzitaifi/Documents/Micro_Estructuras_Trading/Lab_3/myst_equipo3_lab3/hl' \
+                    '.csv')#Statement
 prueba_size = fn.f_pip_size('xauusd')
 tiempos = fn.f_columnas_tiempos(archivo)
 pips = fn.f_columnas_pips(tiempos)
 diccionario = fn.f_estadisticas_ba(archivo)
 evcap = fn.f_evolucion_capital(archivo)
 mad = fn.f_estadisticas_mad(evcap)
+s=fn.f_be_de(archivo)
+print(s)
 
-# Saber si al cerrar una operacion ganadora se quedo abierta una con perdida flotante
-ot = [(pd.to_datetime(dt.archivo['Open Time'])[i]) for i in np.arange(0, len(dt.archivo), 1)]
-ct = [(pd.to_datetime(dt.archivo['Close Time'])[i]) for i in np.arange(0, len(dt.archivo), 1)]
-gn = []
-ocp = []
-for i in np.arange(0, len(dt.archivo), 1):
-    if ot[i] >= ot[i - 1] and ct[i] > ct[i - 1] and ot[i] < ct[i - 1] and dt.archivo.Profit[i - 1] >= 0 and \
-            dt.archivo.Profit[i] < 0:
-        ocp.append(i)  # Posicion de operaciones complementarias con perdida flotante
-        gn.append(i - 1)  # Posicion de la operacion ganadora (ancla)
-
-# Punto de referencia:
-
-ratop=1

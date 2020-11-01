@@ -13,9 +13,10 @@ import data as dt
 import pandas as pd
 import datetime
 from datetime import datetime
+import json
+
 
 def f_leer_archivo(ruta_archivo):
-
     archivo = pd.read_csv(ruta_archivo, header=0, skip_blank_lines=True)
     archivo = archivo.dropna().reset_index(drop=True)
     archivo = archivo.rename(columns={'Price.1': 'Close Price'}, inplace=False)
@@ -27,7 +28,6 @@ def f_leer_archivo(ruta_archivo):
     archivo['Item'] = [i.replace('wticousd', 'wtico') for i in archivo['Item']]
 
     return archivo
-
 
 
 # %% aqui hacemos la función del multiplicador
@@ -186,23 +186,24 @@ def f_estadisticas_ba(archivo):
 def f_evolucion_capital(dt_data):
     # Columna timestamp
     # Quitar el horario a las fechas.
-    sd=pd.DataFrame(columns=['t'])
+    sd = pd.DataFrame(columns=['t'])
     sd['t'] = pd.to_datetime(dt_data['Open Time'])
-    sd['t']  = sd['t'].dt.strftime('%Y-%m-%d')
+    sd['t'] = sd['t'].dt.strftime('%Y-%m-%d')
     dpp = pd.DataFrame(columns=['timestamp', 'profit_d', 'profit_acm_d'])
-    uu = sd['t'] .unique()
+    uu = sd['t'].unique()
     dpp['timestamp'] = uu
 
     # Columna profit_d
     pff = []
     for i in range(len(uu)):
-        pf = (dt_data[sd['t']  == dpp['timestamp'][i]]['Profit'])
+        pf = (dt_data[sd['t'] == dpp['timestamp'][i]]['Profit'])
         pff.append(pf.sum())
     dpp['profit_d'] = pff
     # Columna profit_acm_d
     pacm = dpp['profit_d'].cumsum()
     dpp['profit_acm_d'] = 100000 + pacm
     return dpp
+
 
 # Segundo output: MAD(Luz)
 
@@ -240,37 +241,50 @@ def f_estadisticas_mad(new_df):
     mad['metrica'] = ['sharpe', 'drawdown_capi', 'drawup_capi']
     mad['valor'] = [shp, [fi, ff, drawn_down], [fiu, ffu, drawn_up]]
     mad['descripción'] = ['Muestra el rendimiento extra por encima de la tasa libre de riesgo que puede esperarse en '
-                      'una inversión respecto al riesgo que se asume. '
-                      'Un sharpe alto significa que se obtuvo un retorno sobre rf mucho mayor al riesgo que se '
-                      'contrae.',
-                      'Representa la "racha" de en la que se presentó una perdida drástica después de haber '
-                      'llegado al máximo punto de evolución de capital '
-                      'en un periodo de inversión. ', 'Señara el lapso de tiempo donde se tuvo un alba continua '
-                                                      'después de haber tenido la caída Máxima del periodo que se '
-                                                      'analiza'
-]
+                          'una inversión respecto al riesgo que se asume. '
+                          'Un sharpe alto significa que se obtuvo un retorno sobre rf mucho mayor al riesgo que se '
+                          'contrae.',
+                          'Representa la "racha" de en la que se presentó una perdida drástica después de haber '
+                          'llegado al máximo punto de evolución de capital '
+                          'en un periodo de inversión. ', 'Señara el lapso de tiempo donde se tuvo un alba continua '
+                                                          'después de haber tenido la caída Máxima del periodo que se '
+                                                          'analiza'
+                          ]
     return mad
 
-<<<<<<< HEAD
 
-=======
-def  operaciones_ganadoras(data):
-    instrumento = data.Item[data['Profit'].astype(float) > 0]
-    volumen = data.Size[data['Profit'].astype(float) > 0]
-    sentido = data.Type[data['Profit'].astype(float) > 0]
-    profit_ganadora = (data.Profit[data['Profit'].astype(float) > 0]).astype(float) + 100000
+# Operaciones.
+def f_be_de(dt_data):
+    ot = [(pd.to_datetime(dt_data['Open Time'])[i]) for i in np.arange(0, len(dt_data), 1)]
+    ct = [(pd.to_datetime(dt_data['Close Time'])[i]) for i in np.arange(0, len(dt_data), 1)]
+    # Saber si al cerrar una operacion ganadora se quedo abierta una con perdida flotante
+    gn = []
+    ocp = []
+    for i in np.arange(0, len(dt_data), 1):
+        if ot[i] >= ot[i - 1] and ct[i] > ct[i - 1] and ot[i] < ct[i - 1] and dt_data.Profit[i - 1] >= 0 and \
+                dt_data.Profit[i] < 0:
+            ocp.append(i)  # Posicion de operaciones complementarias con perdida flotante
+            gn.append(i - 1)  # Posicion de la operacion ganadora (ancla)
 
-    ganadoras = pd.DataFrame({'intrumento': instrumento, 'volumen': volumen, 'sentido': sentido, 'profit_ganadora': profit_ganadora})
+    if len(ocp) > 0:
+        # ocurrencias
+        ocurrencias = len(ocp)
+        acut = dt_data['Close Time'][gn]
+    for i in range(len(ocp)):
+        # Ganadora
+        timeg = dt_data['Close Time'][gn[i]]
+        insg = str(dt_data.Item[gn[i]])
+        volg = 0
+        seng = dt_data.Type[gn[i]]
+        profit_ganadora = 0
+        # Perdedora
+        timep = dt_data['Close Time'][ocp[i]]
+        insp = dt_data.Item[ocp[i]]
+        volp = 0
+        senp = dt_data.Type[ocp[i]]
+        profit_perdedora = 0
+        ocurrencia_1 = {'cantidad': ocurrencias, 'ocurrencia_1': {'timestamp': timeg, 'operaciones': {
+            'Ganadora': {'intrumento': insg, 'volumen': volg, 'sentido': seng, 'profit_ganadora': profit_ganadora},
+            'Perdedora': {'intrumento': insp, 'volumen': volp, 'sentido': senp, 'profit_perdedora': profit_perdedora}}},'resultados':pd.DataFrame(columns=['ocurrencias','	status_quo','aversion_perdida','sensibilidad_decreciente'])}
 
-    return (ganadoras)
-
-def operaciones_perdedoras(data):
-    instrumento2 = data.Item[data['Profit'].astype(float) < 0]
-    volumen2 = data.Size[data['Profit'].astype(float) < 0]
-    sentido2 = data.Type[data['Profit'].astype(float) < 0]
-    profit_perdedora = (data.Profit[data['Profit'].astype(float) < 0]).astype(float) + 100000
-
-    perdedora = pd.DataFrame(
-        {'intrumento': instrumento2, 'volumen': volumen2, 'sentido': sentido2, 'profit_ganadora': profit_perdedora})
-    return (perdedora)
->>>>>>> f65843035f33f1495cf492a9c84d98b8d2a83006
+        return (ocurrencia_1)

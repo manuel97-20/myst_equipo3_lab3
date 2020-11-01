@@ -9,12 +9,13 @@
 """
 import pandas as pd
 
-oanda_instruments = r'C:\Users\manue\Documents\Documentos\Microestructura y sistemas de trading\myst_equipo3_lab3\Oanda_Instruments.csv'
+oanda_instruments ='c:/Users/luzitaifi/Documents/Micro_Estructuras_Trading/Lab_3/myst_equipo3_lab3/Oanda_Instruments' \
+                    '.csv '
 oanda_instruments = pd.read_csv(oanda_instruments,
                                 header=0, sep=',', index_col=0, parse_dates=False,
                                 skip_blank_lines=True)
 
-<<<<<<< HEAD
+
 archivo = archivo = 'c:/Users/luzitaifi/Documents/Micro_Estructuras_Trading/Lab_3/myst_equipo3_lab3/Oanda' \
                     '.csv'
 archivo = pd.read_csv(archivo, header=0, skip_blank_lines=True)
@@ -26,5 +27,4 @@ archivo['Profit'] = [i.replace(" ", "") for i in archivo['Profit']]
 archivo['Profit'] = pd.to_numeric(archivo['Profit'])
 archivo['Item'] = [archivo['Item'].iloc[i].replace('-e', '') for i in range(len(archivo))]
 archivo['Item'] = [i.replace('wticousd', 'wtico') for i in archivo['Item']]
-=======
->>>>>>> f65843035f33f1495cf492a9c84d98b8d2a83006
+
