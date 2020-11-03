@@ -14,6 +14,10 @@ import pandas as pd
 import datetime
 from datetime import datetime
 import json
+from datetime import timedelta                            # diferencia entre datos tipo tiempo
+from oandapyV20 import API                                # conexion con broker OANDA
+import oandapyV20.endpoints.instruments as instruments    # informacion de precios historicos
+
 
 
 def f_leer_archivo(ruta_archivo):
@@ -260,31 +264,229 @@ def f_be_de(dt_data):
     # Saber si al cerrar una operacion ganadora se quedo abierta una con perdida flotante
     gn = []
     ocp = []
+    tyg = []
+    tyc = []
     for i in np.arange(0, len(dt_data), 1):
-        if ot[i] >= ot[i - 1] and ct[i] > ct[i - 1] and ot[i] < ct[i - 1] and dt_data.Profit[i - 1] >= 0 and \
-                dt_data.Profit[i] < 0:
+        if ct[i] > ct[i - 1] and ot[i] < ct[i - 1] and dt_data.Profit[i - 1] >= 0 and (
+                ct[i - 1] - ot[i - 1]).total_seconds() > 910:
             ocp.append(i)  # Posicion de operaciones complementarias con perdida flotante
             gn.append(i - 1)  # Posicion de la operacion ganadora (ancla)
+            tyg.append(dt_data.Type[i - 1])
+            tyc.append(dt_data.Type[i])
 
-    if len(ocp) > 0:
-        # ocurrencias
-        ocurrencias = len(ocp)
-        acut = dt_data['Close Time'][gn]
-    for i in range(len(ocp)):
-        # Ganadora
-        timeg = dt_data['Close Time'][gn[i]]
-        insg = str(dt_data.Item[gn[i]])
-        volg = 0
-        seng = dt_data.Type[gn[i]]
-        profit_ganadora = 0
-        # Perdedora
-        timep = dt_data['Close Time'][ocp[i]]
-        insp = dt_data.Item[ocp[i]]
-        volp = 0
-        senp = dt_data.Type[ocp[i]]
-        profit_perdedora = 0
-        ocurrencia_1 = {'cantidad': ocurrencias, 'ocurrencia_1': {'timestamp': timeg, 'operaciones': {
-            'Ganadora': {'intrumento': insg, 'volumen': volg, 'sentido': seng, 'profit_ganadora': profit_ganadora},
-            'Perdedora': {'intrumento': insp, 'volumen': volp, 'sentido': senp, 'profit_perdedora': profit_perdedora}}},'resultados':pd.DataFrame(columns=['ocurrencias','	status_quo','aversion_perdida','sensibilidad_decreciente'])}
 
-        return (ocurrencia_1)
+
+    # -- --------------------------------------------------------- FUNCION: Descargar precios -- #
+    # -- Descargar precios historicos con OANDA
+
+    def f_precios_masivos(p0_fini, p1_ffin, p2_gran, p3_inst, p4_oatk, p5_ginc):
+        """
+        Parameters
+        ----------
+        p0_fini
+        p1_ffin
+        p2_gran
+        p3_inst
+        p4_oatk
+        p5_ginc
+
+        Returns
+        -------
+        dc_precios
+
+        Debugging
+        ---------
+
+        """
+
+        def f_datetime_range_fx(p0_start, p1_end, p2_inc, p3_delta):
+            """
+
+            Parameters
+            ----------
+            p0_start
+            p1_end
+            p2_inc
+            p3_delta
+
+            Returns
+            -------
+            ls_resultado
+
+            Debugging
+            ---------
+            """
+
+            ls_result = []
+            nxt = p0_start
+
+            while nxt <= p1_end:
+                ls_result.append(nxt)
+                if p3_delta == 'minutes':
+                    nxt += timedelta(minutes=p2_inc)
+                elif p3_delta == 'hours':
+                    nxt += timedelta(hours=p2_inc)
+                elif p3_delta == 'days':
+                    nxt += timedelta(days=p2_inc)
+
+            return ls_result
+
+        # inicializar api de OANDA
+
+        api = API(access_token=p4_oatk)
+
+        gn = {'S30': 30, 'S10': 10, 'S5': 5, 'M1': 60, 'M5': 60 * 5, 'M15': 60 * 15,
+              'M30': 60 * 30, 'H1': 60 * 60, 'H4': 60 * 60 * 4, 'H8': 60 * 60 * 8,
+              'D': 60 * 60 * 24, 'W': 60 * 60 * 24 * 7, 'M': 60 * 60 * 24 * 7 * 4}
+
+        # -- para el caso donde con 1 peticion se cubran las 2 fechas
+        if int((p1_ffin - p0_fini).total_seconds() / gn[p2_gran]) < 4999:
+
+            # Fecha inicial y fecha final
+            f1 = p0_fini.strftime('%Y-%m-%dT%H:%M:%S')
+            f2 = p1_ffin.strftime('%Y-%m-%dT%H:%M:%S')
+
+            # Parametros pra la peticion de precios
+            params = {"granularity": p2_gran, "price": "M", "dailyAlignment": 16, "from": f1,
+                      "to": f2}
+
+            # Ejecutar la peticion de precios
+            a1_req1 = instruments.InstrumentsCandles(instrument=p3_inst, params=params)
+            a1_hist = api.request(a1_req1)
+
+            # Para debuging
+            # print(f1 + ' y ' + f2)
+            lista = list()
+
+            # Acomodar las llaves
+            for i in range(len(a1_hist['candles']) - 1):
+                lista.append({'TimeStamp': a1_hist['candles'][i]['time'],
+                              'Open': a1_hist['candles'][i]['mid']['o'],
+                              'High': a1_hist['candles'][i]['mid']['h'],
+                              'Low': a1_hist['candles'][i]['mid']['l'],
+                              'Close': a1_hist['candles'][i]['mid']['c']})
+
+            # Acomodar en un data frame
+            r_df_final = pd.DataFrame(lista)
+            r_df_final = r_df_final[['TimeStamp', 'Open', 'High', 'Low', 'Close']]
+            r_df_final['TimeStamp'] = pd.to_datetime(r_df_final['TimeStamp'])
+
+            return r_df_final
+
+        # -- para el caso donde se construyen fechas secuenciales
+        else:
+
+            # hacer series de fechas e iteraciones para pedir todos los precios
+            fechas = f_datetime_range_fx(p0_start=p0_fini, p1_end=p1_ffin, p2_inc=p5_ginc,
+                                         p3_delta='minutes')
+
+            # Lista para ir guardando los data frames
+            lista_df = list()
+
+            for n_fecha in range(0, len(fechas) - 1):
+
+                # Fecha inicial y fecha final
+                f1 = fechas[n_fecha].strftime('%Y-%m-%dT%H:%M:%S')
+                f2 = fechas[n_fecha + 1].strftime('%Y-%m-%dT%H:%M:%S')
+
+                # Parametros pra la peticion de precios
+                params = {"granularity": p2_gran, "price": "M", "dailyAlignment": 16, "from": f1,
+                          "to": f2}
+
+                # Ejecutar la peticion de precios
+                a1_req1 = instruments.InstrumentsCandles(instrument=p3_inst, params=params)
+                a1_hist = api.request(a1_req1)
+
+                # Para debuging
+                print(f1 + ' y ' + f2)
+                lista = list()
+
+                # Acomodar las llaves
+                for i in range(len(a1_hist['candles']) - 1):
+                    lista.append({'TimeStamp': a1_hist['candles'][i]['time'],
+                                  'Open': a1_hist['candles'][i]['mid']['o'],
+                                  'High': a1_hist['candles'][i]['mid']['h'],
+                                  'Low': a1_hist['candles'][i]['mid']['l'],
+                                  'Close': a1_hist['candles'][i]['mid']['c']})
+
+                # Acomodar en un data frame
+                pd_hist = pd.DataFrame(lista)
+                pd_hist = pd_hist[['TimeStamp', 'Open', 'High', 'Low', 'Close']]
+                pd_hist['TimeStamp'] = pd.to_datetime(pd_hist['TimeStamp'])
+
+                # Ir guardando resultados en una lista
+                lista_df.append(pd_hist)
+
+            # Concatenar todas las listas
+            r_df_final = pd.concat([lista_df[i] for i in range(0, len(lista_df))])
+
+            # resetear index en dataframe resultante porque guarda los indices del dataframe pasado
+            r_df_final = r_df_final.reset_index(drop=True)
+
+            return r_df_final
+    gns = [14, 9, 6]
+    #ocps = [15, 10, 7]
+
+    if gn[0] == gns[0]:
+        ff = "2020-10-06 11:16:20"
+        fi = "2020-10-05 00:24:27"
+        OA_In = "EUR_USD";
+    if gn[0] == gns[1]:
+        ff = "2020-10-01 16:24:16"
+        fi = "2020-09-28 21:58:28"
+        OA_In = "WTICO_USD"
+    if gn[0] == gns[2]:
+        ff = "2020-10-05 00:28:34"
+        fi = "2020-09-30 00:17:15"
+        OA_In ="AUD_USD"
+    OA_Gn = "D";  # Granularidad de velas
+    fini = pd.to_datetime(fi).tz_localize('America/Mexico_City');  # Fecha inicial
+    ffin = pd.to_datetime(ff).tz_localize('America/Mexico_City');  # Fecha
+    OA_Ak = "90fb85dd7f0d7dc632de8e58ae42f263-7883ae215e6ff58d58aa33d95dfbb1e9"
+    data = f_precios_masivos(p0_fini=fini, p1_ffin=ffin, p2_gran=OA_Gn, p3_inst=OA_In, p4_oatk=OA_Ak, p5_ginc=4900)
+    tyo = dt_data.Type[ocp[0]]
+    nc = np.array(data.Close[-1:])
+    no = dt_data.Price[ocp[0]]
+    nc = nc.astype(np.float)
+    s = (dt_data.Size[gn[0]])
+    apca = 100000 * 0.0001
+    if tyo == "sell":
+        p = no - nc
+    else:
+        p = nc - no
+    p_value = apca * nc * p
+
+    if p > 0:
+        res=pd.DataFrame(columns=['ocurrencias', 'status_quo', 'aversion_perdida', 'sensibilidad_decreciente'])
+        res.ocurrencias= 0
+        res.status_quo='0%'
+        res.aversion_perdida='0%'
+        res.sensibilidad_decreciente='No'
+
+        ocurrencia_1 = {'cantidad': 0, 'ocurrencia_1': {'timestamp': 'Ninguno', 'operaciones': {
+            'Ganadora': {'intrumento': 'Ninguno', 'volumen': 'Ninguno', 'sentido': 'Ninguno',
+                         'profit_ganadora': 'Ninguno'},
+            'Perdedora': {'intrumento': 'Ninguno', 'volumen': 'Ninguno', 'sentido': 'Ninguno',
+                          'profit_perdedora': 'Ninguno'}}},
+                        'resultados': res}
+    else:
+
+        res=pd.DataFrame(columns=['ocurrencias', 'status_quo', 'aversion_perdida', 'sensibilidad_decreciente'])
+        res.ocurrencias= len(gn)
+        if round(float((apca * nc * p)), 2) / dt_data.profit_acum[gn[0]] < dt_data.Profit[gn[0]] / dt_data.profit_acum[
+            gn[0]]:
+            res.status_quo='100%'
+        res.aversion_perdida='0%'
+        res.sensibilidad_decreciente='No'
+
+        ocurrencia_1 = {'cantidad': len(gn), 'ocurrencia_1': {'timestamp': dt_data['Close Time'][gn[0]], 'operaciones': {
+            'Ganadora': {'intrumento': (dt_data.Item[gn[0]]).upper(), 'volumen': 'Ninguno', 'sentido': dt_data.Type[gn[0]],
+                         'profit_ganadora': dt_data.Profit[gn[0]]},
+            'Perdedora': {'intrumento': (dt_data.Item[ocp[0]]).upper(), 'volumen': 'Ninguno', 'sentido': (dt_data.Type[ocp[0]]),
+                          'profit_perdedora':round(float((apca * nc * p)),2)}}},'ratio_cp_profit_acm':round(float((apca * nc * p)),2)/dt_data.profit_acum[gn[0]],'ratio_cg_profit_acm':dt_data.Profit[gn[0]]/dt_data.profit_acum[gn[0]],
+                        'ratio_cp_cg':round(float((apca * nc * p)),2)/dt_data.Profit[gn[0]],
+                        'resultados': res}
+
+
+    return (ocurrencia_1)
+
