@@ -20,8 +20,9 @@ labels = rank['symbol']
 values = rank['rank']
 
 # pull is given as a fraction of the pie radius
-fig = go.Figure(data=[go.Pie(labels=labels, values=values, pull=[0.2,0.2,0,0,0,0,0])])
-fig.show()
+fig_1 = go.Figure(data=[go.Pie(labels=labels, values=values, pull=[0.2,0.2,0,0,0,0,0])])
+fig_1.update_layout(title='Ranking')
+fig_1.show()
 
 
 # Add data
