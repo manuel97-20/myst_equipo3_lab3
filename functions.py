@@ -16,7 +16,7 @@ from datetime import datetime
 import json
 from datetime import timedelta                            # diferencia entre datos tipo tiempo
 from oandapyV20 import API                                # conexion con broker OANDA
-import oandapyV20.endpoints.instruments as instruments    # informacion de precios historicos
+import oandapyV20.endpoints.instruments as instruments    # informacion
 
 
 
