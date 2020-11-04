@@ -472,7 +472,7 @@ def f_be_de(dt_data):
     else:
 
         res=pd.DataFrame(columns=['ocurrencias', 'status_quo', 'aversion_perdida', 'sensibilidad_decreciente'])
-        res.ocurrencias= len(gn)
+        res['ocurrencias']= len(gn)
         if round(float((apca * nc * p)), 2) / dt_data.profit_acum[gn[0]] < dt_data.Profit[gn[0]] / dt_data.profit_acum[
             gn[0]]:
             res.status_quo='100%'
@@ -488,5 +488,5 @@ def f_be_de(dt_data):
                         'resultados': res}
 
 
-    return (ocurrencia_1)
+    return (res)
 
