@@ -11,7 +11,8 @@ import functions as fn
 import pandas as pd
 import numpy as np
 
-archivo = fn.f_leer_archivo(r'C:\Users\manue\Documents\Documentos\Microestructura y sistemas de trading\myst_equipo3_lab3\Statement.csv')#Statement
+archivo = fn.f_leer_archivo('c:/Users/luzitaifi/Documents/Micro_Estructuras_Trading/Lab_3/myst_equipo3_lab3/Statement' \
+                    '.csv')#Statement
 prueba_size = fn.f_pip_size('xauusd')
 tiempos = fn.f_columnas_tiempos(archivo)
 pips = fn.f_columnas_pips(tiempos)
@@ -20,4 +21,3 @@ evcap = fn.f_evolucion_capital(archivo)
 mad = fn.f_estadisticas_mad(evcap)
 s=fn.f_be_de(archivo)
 diseff=fn.f_be_de(archivo)
-print(diseff)

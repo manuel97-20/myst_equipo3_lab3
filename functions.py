@@ -457,11 +457,7 @@ def f_be_de(dt_data):
     p_value = apca * nc * p
 
     if p > 0:
-        res=pd.DataFrame(columns=['ocurrencias', 'status_quo', 'aversion_perdida', 'sensibilidad_decreciente'])
-        res.ocurrencias= 0
-        res.status_quo='0%'
-        res.aversion_perdida='0%'
-        res.sensibilidad_decreciente='No'
+        res=pd.DataFrame({'ocurrencias': [0], 'status_quo':['0%'], 'aversion_perdida':['0%'], 'sensibilidad_decreciente':['NO']})
 
         ocurrencia_1 = {'cantidad': 0, 'ocurrencia_1': {'timestamp': 'Ninguno', 'operaciones': {
             'Ganadora': {'intrumento': 'Ninguno', 'volumen': 'Ninguno', 'sentido': 'Ninguno',
@@ -471,22 +467,36 @@ def f_be_de(dt_data):
                         'resultados': res}
     else:
 
-        res=pd.DataFrame(columns=['ocurrencias', 'status_quo', 'aversion_perdida', 'sensibilidad_decreciente'])
-        res['ocurrencias']= len(gn)
+        res=pd.DataFrame({'ocurrencias':[len(gn)], 'status_quo':[0], 'aversion_perdida':[1], 'sensibilidad_decreciente':[1]})
+
         if round(float((apca * nc * p)), 2) / dt_data.profit_acum[gn[0]] < dt_data.Profit[gn[0]] / dt_data.profit_acum[
             gn[0]]:
             res.status_quo='100%'
-        res.aversion_perdida='0%'
-        res.sensibilidad_decreciente='No'
+        else:
+            res.status_quo = '0%'
+        if round(float((apca * nc * p)), 2)/dt_data.Profit[gn[0]] >2:
+            res.aversion_perdida='100%'
+        else:
+            res.aversion_perdida = '0%'
 
-        ocurrencia_1 = {'cantidad': len(gn), 'ocurrencia_1': {'timestamp': dt_data['Close Time'][gn[0]], 'operaciones': {
-            'Ganadora': {'intrumento': (dt_data.Item[gn[0]]).upper(), 'volumen': 'Ninguno', 'sentido': dt_data.Type[gn[0]],
-                         'profit_ganadora': dt_data.Profit[gn[0]]},
-            'Perdedora': {'intrumento': (dt_data.Item[ocp[0]]).upper(), 'volumen': 'Ninguno', 'sentido': (dt_data.Type[ocp[0]]),
-                          'profit_perdedora':round(float((apca * nc * p)),2)}}},'ratio_cp_profit_acm':round(float((apca * nc * p)),2)/dt_data.profit_acum[gn[0]],'ratio_cg_profit_acm':dt_data.Profit[gn[0]]/dt_data.profit_acum[gn[0]],
-                        'ratio_cp_cg':round(float((apca * nc * p)),2)/dt_data.Profit[gn[0]],
+        if round(float((apca * nc * p)), 2)/dt_data.Profit[gn[0]] >2 and dt_data.Profit[gn[0]]<dt_data.Profit[gn[0]+1]:
+            res.sensibilidad_decreciente= 'Sí'
+        else:
+            res.sensibilidad_decreciente='No'
+
+        ocurrencia_1 = {'ocurrencias':
+            {'cantidad': len(gn), 'ocurrencia_1': {'timestamp': dt_data['Close Time'][gn[0]], 'operaciones': {
+                'Ganadora': {'intrumento': (dt_data.Item[gn[0]]).upper(), 'volumen': 'Ninguno',
+                             'sentido': dt_data.Type[gn[0]],
+                             'profit_ganadora': dt_data.Profit[gn[0]]},
+                'Perdedora': {'intrumento': (dt_data.Item[ocp[0]]).upper(), 'volumen': 'Ninguno',
+                              'sentido': (dt_data.Type[ocp[0]]),
+                              'profit_perdedora': round(float((apca * nc * p)), 2)}}},
+             'ratio_cp_profit_acm': round(float((apca * nc * p)), 2) / dt_data.profit_acum[gn[0]],
+             'ratio_cg_profit_acm': dt_data.Profit[gn[0]] / dt_data.profit_acum[gn[0]],
+             'ratio_cp_cg': round(float((apca * nc * p)), 2) / dt_data.Profit[gn[0]]},
                         'resultados': res}
 
 
-    return (res)
+    return (ocurrencia_1)
 
